@@ -1,10 +1,7 @@
 {
   "name" : "wcdb",
-  "version-string" : "1.0.0",
+  "version-string" : "2.1.8",
   "builtin-baseline" : "509f71e53f45e46c13fa7935d2f6a45803580c07",
-  "vcpkg-configuration" : {
-    "overlay-ports" : [ "./vcpkg_ports/openssl" ]
-  },
   "dependencies" : [ {
     "name" : "zstd",
     "version>=" : "1.5.6"

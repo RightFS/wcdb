@@ -489,14 +489,16 @@ export(TARGETS ${TARGET_NAME} FILE ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}Tar
 # Install the target
 install(TARGETS ${TARGET_NAME}
         EXPORT ${TARGET_NAME}Targets
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+)
 
 install(EXPORT ${TARGET_NAME}Targets
         FILE ${TARGET_NAME}Targets.cmake
         NAMESPACE ${TARGET_NAME}::
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${TARGET_NAME})
+        DESTINATION share/${TARGET_NAME}
+)
 
 # 生成配置文件
 include(CMakePackageConfigHelpers)
@@ -514,6 +516,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+        DESTINATION share/${PROJECT_NAME}
 )
 

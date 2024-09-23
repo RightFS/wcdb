@@ -515,4 +515,4 @@ install(TARGETS ${TARGET_NAME}
 
 # 安装头文件
 install(DIRECTORY ${EXPORT_PUBLIC_HEADERS_PATH}/WCDB
-        DESTINATION include/WCDB)
+        DESTINATION include/)

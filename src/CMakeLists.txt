@@ -503,3 +503,16 @@ elseif (WIN32)
 else ()
     message(FATAL_ERROR "Unsupported platform!")
 endif ()
+
+# 设置安装目录
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
+
+# 安装库文件
+install(TARGETS ${TARGET_NAME}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+
+# 安装头文件
+install(DIRECTORY ${EXPORT_PUBLIC_HEADERS_PATH}/WCDB
+        DESTINATION include/WCDB)

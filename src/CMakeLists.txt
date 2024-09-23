@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.13)
-project(WCDB)
+project(WCDB VERSION 2.1.8)
 
 include(utility.cmake)
-include(../sqlcipher/sqlcipher.cmake)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(ZSTD REQUIRED)
-#find_package(sqlcipher REQUIRED)
+find_package(sqlcipher REQUIRED)
 #        OpenSSL::Crypto
 #        ZLIB::ZLIB
 if (NOT DEFINED WCDB_ZSTD)
@@ -33,16 +32,11 @@ set(WCDB_SRC_DIR ${CMAKE_CURRENT_LIST_DIR})
 file(GLOB_RECURSE WCDB_COMMON_SRC
         ${WCDB_SRC_DIR}/common/*.c
         ${WCDB_SRC_DIR}/common/*.cpp
-        ${WCDB_SRC_DIR}/common/*.h
-        ${WCDB_SRC_DIR}/common/*.hpp
 )
 recursive_subdirs(WCDB_COMMON_INCLUDES ${WCDB_SRC_DIR}/common)
-
 file(GLOB_RECURSE WCDB_CPP_SRC
         ${WCDB_SRC_DIR}/cpp/*.c
         ${WCDB_SRC_DIR}/cpp/*.cpp
-        ${WCDB_SRC_DIR}/cpp/*.h
-        ${WCDB_SRC_DIR}/cpp/*.hpp
 )
 list(FILTER WCDB_CPP_SRC EXCLUDE REGEX "(.*/tests/.*)")
 recursive_subdirs(WCDB_CPP_INCLUDES ${WCDB_SRC_DIR}/cpp)
@@ -242,11 +236,7 @@ file(GLOB_RECURSE WCDB_PUBLIC_HEADERS
         ${WCDB_SRC_DIR}/cpp/WCDBCpp.h
 )
 
-if (WCONAN_MODE)
-    set(EXPORT_PUBLIC_HEADERS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../WeChat/export_headers)
-else ()
-    set(EXPORT_PUBLIC_HEADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/export_headers)
-endif ()
+set(EXPORT_PUBLIC_HEADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/export_headers)
 
 # export public headers
 if (WCDB_CPP)
@@ -394,9 +384,13 @@ endif ()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-target_link_libraries(sqlcipher PUBLIC OpenSSL::Crypto)
-target_link_libraries(${TARGET_NAME} PRIVATE sqlcipher)
-target_include_directories(${TARGET_NAME} PUBLIC ${WCDB_COMMON_INCLUDES})
+
+target_include_directories(${TARGET_NAME}
+        PRIVATE
+        $<BUILD_INTERFACE:${WCDB_COMMON_INCLUDES}>
+        PUBLIC
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 if (WCDB_ZSTD)
 #    include(zstd.cmake)
@@ -412,63 +406,44 @@ endif ()
 
 if (WCDB_CPP)
     target_sources(${TARGET_NAME} PRIVATE ${WCDB_CPP_SRC})
-    target_include_directories(${TARGET_NAME} PUBLIC ${WCDB_CPP_INCLUDES})
+    target_include_directories(${TARGET_NAME}
+            PRIVATE
+            $<BUILD_INTERFACE:${WCDB_CPP_INCLUDES}>
+            PUBLIC
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
 endif ()
 
 if (WCDB_BRIDGE)
     target_sources(${TARGET_NAME} PRIVATE ${WCDB_BRIDGE_SRC})
-    target_include_directories(${TARGET_NAME} PUBLIC ${WCDB_BRIDGE_INCLUDES})
+    target_include_directories(${TARGET_NAME}
+            PUBLIC
+            $<BUILD_INTERFACE:${WCDB_BRIDGE_INCLUDES}>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
 endif ()
 
-if (WCONAN_MODE)
-    wconan_get_libraries_dir(
-            WCONAN_LIB_DIR
-            wconan_libs
-    )
-    target_include_directories(sqlcipher PUBLIC ${WCONAN_LIB_DIR}/include)
-    target_link_directories(sqlcipher PUBLIC ${WCONAN_LIB_DIR}/libs)
-else ()
-    if (ANDROID)
-        target_include_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/android_old/${CMAKE_ANDROID_ARCH}/include)
-        target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/android_old/${CMAKE_ANDROID_ARCH}/lib)
-    elseif (LINUX)
-        target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/include)
-        target_link_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/linux/arm64)
-        target_link_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/linux/x86_64)
-    elseif (WIN32)
-        target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/include)
-        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-            target_link_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/windows/win64)
-        else ()
-            target_link_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/windows/win32)
-        endif ()
-    elseif (OHOS)
-        if (${OHOS_ARCH} STREQUAL "arm64-v8a")
-            target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/ohos/arm64-v8a)
-        elseif (${OHOS_ARCH} STREQUAL "x86_64")
-            target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/ohos/x86_64)
-        endif ()
-    endif ()
-endif ()
+
+target_link_libraries(${TARGET_NAME}
+        PUBLIC
+        ZLIB::ZLIB
+        sqlcipher::sqlcipher
+)
 
 if (ANDROID)
     message(STATUS "---- BUILD FOR ANDROID ----")
-    find_library(z-lib z)
     target_link_libraries(${TARGET_NAME} PUBLIC
             ${LINK_LIBRARIES}
-            ${z-lib}
             crypto)
 elseif (APPLE AND NOT WCONAN_MODE)
     message(STATUS "---- BUILD FOR APPLE ----")
     find_library(SecurityFramework Security)
     find_library(FoundationFrameWork Foundation)
-    find_library(z-lib z)
     target_link_libraries(${TARGET_NAME} PUBLIC
             ${LINK_LIBRARIES}
             ${SecurityFramework}
             ${FoundationFrameWork}
-            ${z-lib})
-    target_sources(${TARGET_NAME} PUBLIC ${WCDB_PUBLIC_HEADERS})
+            )
     file(STRINGS "../VERSION" WCDB_VERSION)
     message(STATUS "Xcode ${TARGET_NAME}.framework version ${WCDB_VERSION}")
     set_target_properties(${TARGET_NAME} PROPERTIES
@@ -483,21 +458,18 @@ elseif (OHOS)
             ${LINK_LIBRARIES}
             crypto
             pthread
-            z)
+            )
 elseif (LINUX)
     message(STATUS "---- BUILD FOR LINUX ----")
     target_link_libraries(${TARGET_NAME} PUBLIC
             ${LINK_LIBRARIES}
             crypto
             pthread
-            z
             dl)
 elseif (WIN32)
     message(STATUS "---- BUILD FOR WINDOWS ----")
     target_link_libraries(${TARGET_NAME} PUBLIC
             ${LINK_LIBRARIES}
-            OpenSSL::Crypto
-            ZLIB::ZLIB
             Crypt32
             Ws2_32)
 else ()
@@ -507,15 +479,19 @@ endif ()
 # 设置安装目录
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
-# 安装库文件
-install(TARGETS ${TARGET_NAME}
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
-
 # 安装头文件
 install(DIRECTORY ${EXPORT_PUBLIC_HEADERS_PATH}/WCDB
         DESTINATION include/)
+
+# Export the target
+export(TARGETS ${TARGET_NAME} FILE ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}Targets.cmake)
+
+# Install the target
+install(TARGETS ${TARGET_NAME}
+        EXPORT ${TARGET_NAME}Targets
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
 
 install(EXPORT ${TARGET_NAME}Targets
         FILE ${TARGET_NAME}Targets.cmake

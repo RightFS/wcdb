@@ -31,8 +31,8 @@
 #include <string.h>
 #if defined(WCDB_ZSTD) && WCDB_ZSTD
 #define ZDICT_STATIC_LINKING_ONLY 1
-#include <zstd/zdict.h>
-#include <zstd/zstd.h>
+#include <zdict.h>
+#include <zstd.h>
 #endif
 
 namespace WCDB {

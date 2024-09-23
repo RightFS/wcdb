@@ -26,7 +26,7 @@
 #include <memory>
 #include <stdlib.h>
 #if defined(WCDB_ZSTD) && WCDB_ZSTD
-#include <zstd/zstd.h>
+#include <zstd.h>
 #endif
 
 namespace WCDB {

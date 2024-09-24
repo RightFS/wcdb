@@ -4,13 +4,10 @@ project(WCDB VERSION 2.1.8)
 include(utility.cmake)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
-find_package(ZSTD REQUIRED)
 find_package(sqlcipher REQUIRED)
-#        OpenSSL::Crypto
-#        ZLIB::ZLIB
-if (NOT DEFINED WCDB_ZSTD)
-    set(WCDB_ZSTD ON CACHE BOOL "Build WCDB with zstd" FORCE)
-endif ()
+
+option(WCDB_ZSTD "Build WCDB with zstd" OFF)
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 set(WCONAN_CMAKE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../WeChat/wconan.cmake)
 if (NOT SKIP_WCONAN AND EXISTS ${WCONAN_CMAKE_PATH})
@@ -297,9 +294,6 @@ if (NOT DEFINED CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif ()
 
-if (NOT DEFINED BUILD_SHARED_LIBS)
-    set(BUILD_SHARED_LIBS ON)
-endif ()
 
 if (ANDROID AND NOT DEFINED ANDROID_STL)
     set(ANDROID_STL "c++_shared")
@@ -394,6 +388,7 @@ target_include_directories(${TARGET_NAME}
 
 if (WCDB_ZSTD)
 #    include(zstd.cmake)
+    find_package(zstd CONFIG REQUIRED)
     target_link_libraries(${TARGET_NAME} PRIVATE zstd::libzstd)
     target_compile_definitions(${TARGET_NAME} PRIVATE WCDB_ZSTD=1)
 endif ()

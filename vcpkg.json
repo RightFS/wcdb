@@ -1,7 +1,7 @@
 {
   "name": "wcdb",
   "version-string": "2.1.8",
-  "builtin-baseline": "509f71e53f45e46c13fa7935d2f6a45803580c07",
+  "builtin-baseline": "f176b58f35a75f9f8f54099cd9df97d2e2793a2e",
   "vcpkg-configuration": {
     "overlay-ports": ["./vcpkg_ports/wcdb-sqlcipher"]
   },
